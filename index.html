@@ -1,1 +1,813 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ulangan Harian - Pilih Karaktermu!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Character Selection Screen */
+        .character-selection {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .title {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+        }
+
+        .title h1 {
+            font-size: 3em;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(255, 255, 255, 0.5); }
+            to { text-shadow: 0 0 30px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.6); }
+        }
+
+        .characters-container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .character-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            width: 350px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            border-color: #ffd700;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .character-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            transition: 0.5s;
+        }
+
+        .character-card:hover::before {
+            left: 100%;
+        }
+
+        .video-container {
+            width: 100%;
+            height: 250px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .character-name {
+            text-align: center;
+            color: white;
+            font-size: 1.8em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Quiz Screen */
+        .quiz-container {
+            display: none;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .quiz-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .timer {
+            font-size: 2em;
+            color: #ffd700;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .timer.warning {
+            color: #ff4444;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .score-display {
+            font-size: 1.5em;
+            color: white;
+            font-weight: bold;
+        }
+
+        .exit-counter {
+            background: rgba(255, 68, 68, 0.3);
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .question-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .question-number {
+            color: #667eea;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 1.4em;
+            color: #333;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option {
+            background: #f8f9fa;
+            border: 3px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1em;
+        }
+
+        .option:hover {
+            background: #e3f2fd;
+            border-color: #667eea;
+            transform: translateX(10px);
+        }
+
+        .option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .option.correct {
+            background: #4caf50;
+            color: white;
+            border-color: #4caf50;
+        }
+
+        .option.wrong {
+            background: #f44336;
+            color: white;
+            border-color: #f44336;
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .next-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .next-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Feedback Animation */
+        .feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 3em;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            pointer-events: none;
+            text-align: center;
+            max-width: 80%;
+        }
+
+        .feedback.show {
+            animation: feedbackShow 1.5s ease-out;
+        }
+
+        @keyframes feedbackShow {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(-10deg); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2) rotate(5deg); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+        }
+
+        /* Result Screen */
+        .result-container {
+            display: none;
+            max-width: 600px;
+            margin: 50px auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 50px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .result-title {
+            font-size: 2.5em;
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+
+        .final-score {
+            font-size: 4em;
+            font-weight: bold;
+            color: #4caf50;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-details {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 1.1em;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Warning Modal */
+        .warning-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .warning-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            text-align: center;
+            animation: modalShow 0.3s ease-out;
+        }
+
+        @keyframes modalShow {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .warning-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .warning-text {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .warning-close {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 30px;
+            font-size: 1.1em;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .title h1 { font-size: 2em; }
+            .character-card { width: 100%; }
+            .quiz-header { flex-direction: column; }
+            .question-text { font-size: 1.2em; }
+            .feedback { font-size: 2em; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Character Selection Screen -->
+    <div class="character-selection" id="characterSelection">
+        <div style="width: 100%;">
+            <div class="title">
+                <h1>🎮 PILIH KARAKTERMU! 🎮</h1>
+                <p style="font-size: 1.2em; margin-top: 20px;">Siap menghadapi tantangan?</p>
+            </div>
+            <div class="characters-container">
+                <div class="character-card" onclick="selectCharacter('jokowisme')">
+                    <div class="video-container">
+                        <video autoplay loop muted playsinline>
+                            <source src="Jokowisme/Jokowisme.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <div class="character-name">JOKOWISME</div>
+                </div>
+                <div class="character-card" onclick="selectCharacter('nipunegoro')">
+                    <div class="video-container">
+                        <video autoplay loop muted playsinline>
+                            <source src="Pangeran_Nipunegoro/Pangeran_Nipunegoro.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <div class="character-name">PANGERAN NIPUNEGORO</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div class="quiz-container" id="quizContainer">
+        <div class="quiz-header">
+            <div class="timer" id="timer">⏱️ 10:00</div>
+            <div class="score-display">Soal: <span id="questionCounter">1</span>/5</div>
+            <div class="exit-counter" id="exitCounter">🚨 Keluar: 0x</div>
+        </div>
+        <div class="question-card">
+            <div class="question-number" id="questionNumber">Pertanyaan 1</div>
+            <div class="question-text" id="questionText"></div>
+            <div class="options" id="optionsContainer"></div>
+            <button class="next-btn" id="nextBtn" onclick="nextQuestion()" disabled>Lanjut ➜</button>
+        </div>
+    </div>
+
+    <!-- Result Screen -->
+    <div class="result-container" id="resultContainer">
+        <div class="result-title">🎉 HASIL ULANGAN 🎉</div>
+        <div class="final-score" id="finalScore">0</div>
+        <div class="result-details">
+            <div class="result-item">
+                <span>Waktu Digunakan:</span>
+                <span id="timeUsed">0:00</span>
+            </div>
+            <div class="result-item">
+                <span>Keluar dari Halaman:</span>
+                <span id="finalExitCount">0x</span>
+            </div>
+            <div class="result-item">
+                <span>Jawaban Benar:</span>
+                <span id="correctAnswers">0/5</span>
+            </div>
+        </div>
+        <button class="restart-btn" onclick="restartQuiz()">🔄 Ulang Lagi</button>
+    </div>
+
+    <!-- Feedback Animation -->
+    <div class="feedback" id="feedback"></div>
+
+    <!-- Warning Modal -->
+    <div class="warning-modal" id="warningModal">
+        <div class="warning-content">
+            <div class="warning-icon">⚠️</div>
+            <div class="warning-text">Terdeteksi kamu keluar dari halaman ulangan!</div>
+            <div style="color: #999; margin-bottom: 20px;">Tetap fokus dan jangan keluar lagi ya!</div>
+            <button class="warning-close" onclick="closeWarning()">Oke, Saya Mengerti</button>
+        </div>
+    </div>
+
+    <script>
+        // Questions Database
+        const questions = {
+            nipunegoro: [
+                {
+                    question: "Mengapa Pangeran Nipunegoro dikenal sebagai bangsawan paling fenomenal di kerajaan?",
+                    options: [
+                        "Karena beliau menemukan mesin waktu dari bambu",
+                        "Karena hobinya mengoleksi awan sore",
+                        "Karena suka berutang lalu membayar dengan puisi",
+                        "Karena bisa menghilang saat ditagih",
+                        "Karena pernah mencalonkan diri jadi ketua RT istana"
+                    ],
+                    correct: 2
+                },
+                {
+                    question: "Setiap kali Pangeran Nipunegoro berutang di warung kerajaan, beliau biasanya berkata…",
+                    options: [
+                        "Utang adalah investasi masa depan.",
+                        "Catat dulu, takdir yang bayar.",
+                        "Saya bayar pakai aura kebangsawanan.",
+                        "Tunggu panen komet berikutnya.",
+                        "Saya cicil pakai doa tiap purnama."
+                    ],
+                    correct: 1
+                },
+                {
+                    question: "Apa strategi andalan Pangeran Nipunegoro saat dikejar penagih utang?",
+                    options: [
+                        "Menyamar jadi penjual cilok istana",
+                        "Bersembunyi di balik lukisan leluhur",
+                        "Pura-pura jadi patung taman kerajaan",
+                        "Mengirim kucing sebagai negosiator",
+                        "Mengadakan seminar tentang 'Keindahan Berutang'"
+                    ],
+                    correct: 2
+                },
+                {
+                    question: "Mengapa rakyat tetap menyukai Pangeran Nipunegoro meski suka berutang?",
+                    options: [
+                        "Karena beliau selalu tersenyum sambil berutang",
+                        "Karena utangnya dibagi rata ke seluruh kerajaan",
+                        "Karena beliau berutang demi membeli es krim untuk rakyat",
+                        "Karena tanda tangannya estetik",
+                        "Karena beliau selalu berkata 'Ini demi seni.'"
+                    ],
+                    correct: 0
+                },
+                {
+                    question: "Apa cita-cita terbesar Pangeran Nipunegoro?",
+                    options: [
+                        "Membuka bank khusus bangsawan pelupa",
+                        "Menghapus konsep tanggal jatuh tempo",
+                        "Menjadi influencer keuangan kerajaan",
+                        "Membuat undang-undang 'Utang Tanpa Batas'",
+                        "Menjadi legenda sebagai pangeran paling santai sedunia"
+                    ],
+                    correct: 1
+                }
+            ],
+            jokowisme: [
+                {
+                    question: "Apa prinsip utama dalam ideologi Jokowisme?",
+                    options: [
+                        "Kerja, kerja, kerja… lalu istirahat sebentar",
+                        "Blusukan adalah jalan menuju pencerahan",
+                        "Infrastruktur adalah cinta dalam bentuk beton",
+                        "Senyum tipis menyelesaikan 73% masalah",
+                        "Semua benar, tergantung survei"
+                    ],
+                    correct: 2
+                },
+                {
+                    question: "Dalam ajaran Jokowisme, apa makna terdalam dari 'blusukan'?",
+                    options: [
+                        "Teknik teleportasi sosial",
+                        "Ritual menyatu dengan rakyat dan gorengan",
+                        "Cara menghindari rapat terlalu lama",
+                        "Metode mencari Wi-Fi tersembunyi",
+                        "Strategi membeli bakso paling murah"
+                    ],
+                    correct: 1
+                },
+                {
+                    question: "Kitab suci Jokowisme konon berjudul…",
+                    options: [
+                        "Serat Aspal Nusantara",
+                        "Beton dan Kebijaksanaan",
+                        "Tafsir Tol Transental",
+                        "Jalan Lurus dan Jalan Tol",
+                        "Ensiklopedia Senyum Diplomatis"
+                    ],
+                    correct: 3
+                },
+                {
+                    question: "Dalam Jokowisme, pembangunan infrastruktur dipercaya dapat…",
+                    options: [
+                        "Membuka portal antar-dimensi ekonomi",
+                        "Mengundang investor dari galaksi Andromeda",
+                        "Mengurangi galau nasional",
+                        "Membuat rakyat otomatis rajin bangun pagi",
+                        "Mengubah macet menjadi meditasi kolektif"
+                    ],
+                    correct: 2
+                },
+                {
+                    question: "Simbol paling sakral dalam Jokowisme adalah…",
+                    options: [
+                        "Helm proyek berwarna putih bercahaya",
+                        "Miniatur jalan tol sepanjang meja makan",
+                        "Sepatu yang tahan blusukan 1.000 kilometer",
+                        "Peta Indonesia yang tersenyum",
+                        "Mikrofon dengan aura elektabilitas"
+                    ],
+                    correct: 0
+                }
+            ]
+        };
+
+        // Game State
+        let currentCharacter = '';
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let exitCount = 0;
+        let timerSeconds = 600; // 10 minutes
+        let timerInterval = null;
+        let selectedAnswer = null;
+        let correctCount = 0;
+        let startTime = null;
+
+        // Select Character
+        function selectCharacter(character) {
+            currentCharacter = character;
+            document.getElementById('characterSelection').style.display = 'none';
+            document.getElementById('quizContainer').style.display = 'block';
+            startTime = Date.now();
+            loadQuestion();
+            startTimer();
+            setupVisibilityTracking();
+        }
+
+        // Load Question
+        function loadQuestion() {
+            const currentQuestions = questions[currentCharacter];
+            const question = currentQuestions[currentQuestionIndex];
+            
+            document.getElementById('questionNumber').textContent = `Pertanyaan ${currentQuestionIndex + 1}`;
+            document.getElementById('questionCounter').textContent = currentQuestionIndex + 1;
+            document.getElementById('questionText').textContent = question.question;
+            
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.textContent = String.fromCharCode(65 + index) + '. ' + option;
+                optionDiv.onclick = () => selectOption(index, optionDiv);
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            selectedAnswer = null;
+            document.getElementById('nextBtn').disabled = true;
+        }
+
+        // Select Option
+        function selectOption(index, element) {
+            // Remove previous selection
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            element.classList.add('selected');
+            selectedAnswer = index;
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        // Next Question
+        function nextQuestion() {
+            const currentQuestions = questions[currentCharacter];
+            const question = currentQuestions[currentQuestionIndex];
+            
+            // Check answer
+            const isCorrect = selectedAnswer === question.correct;
+            
+            if (isCorrect) {
+                score += 20;
+                correctCount++;
+                showFeedback('SAYA AKAN LAWAN! 💪', true);
+            } else {
+                showFeedback('YO NDAK TAHU KO TANYA SAYA 🤷', false);
+            }
+            
+            // Show correct/wrong
+            const options = document.querySelectorAll('.option');
+            options[selectedAnswer].classList.add(isCorrect ? 'correct' : 'wrong');
+            if (!isCorrect) {
+                options[question.correct].classList.add('correct');
+            }
+            
+            // Disable all options
+            options.forEach(opt => opt.style.pointerEvents = 'none');
+            
+            setTimeout(() => {
+                currentQuestionIndex++;
+                
+                if (currentQuestionIndex < 5) {
+                    loadQuestion();
+                } else {
+                    endQuiz();
+                }
+            }, 2000);
+        }
+
+        // Show Feedback
+        function showFeedback(text, isCorrect) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = text;
+            feedback.style.color = isCorrect ? '#4caf50' : '#ff4444';
+            feedback.classList.add('show');
+            
+            setTimeout(() => {
+                feedback.classList.remove('show');
+            }, 1500);
+        }
+
+        // Timer
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                
+                const minutes = Math.floor(timerSeconds / 60);
+                const seconds = timerSeconds % 60;
+                const timerElement = document.getElementById('timer');
+                timerElement.textContent = `⏱️ ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timerSeconds <= 60) {
+                    timerElement.classList.add('warning');
+                }
+                
+                if (timerSeconds <= 0) {
+                    endQuiz();
+                }
+            }, 1000);
+        }
+
+        // Visibility Tracking (Anti-Cheat)
+        function setupVisibilityTracking() {
+            let isWarningShown = false;
+            
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden && !isWarningShown) {
+                    exitCount++;
+                    document.getElementById('exitCounter').textContent = `🚨 Keluar: ${exitCount}x`;
+                    isWarningShown = true;
+                }
+            });
+            
+            window.addEventListener('focus', function() {
+                if (isWarningShown && exitCount > 0) {
+                    showWarning();
+                    isWarningShown = false;
+                }
+            });
+            
+            window.addEventListener('blur', function() {
+                if (!isWarningShown) {
+                    exitCount++;
+                    document.getElementById('exitCounter').textContent = `🚨 Keluar: ${exitCount}x`;
+                    isWarningShown = true;
+                }
+            });
+        }
+
+        // Show Warning Modal
+        function showWarning() {
+            document.getElementById('warningModal').style.display = 'flex';
+        }
+
+        // Close Warning
+        function closeWarning() {
+            document.getElementById('warningModal').style.display = 'none';
+        }
+
+        // End Quiz
+        function endQuiz() {
+            clearInterval(timerInterval);
+            
+            const timeUsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(timeUsed / 60);
+            const seconds = timeUsed % 60;
+            
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('resultContainer').style.display = 'block';
+            
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('timeUsed').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('finalExitCount').textContent = `${exitCount}x`;
+            document.getElementById('correctAnswers').textContent = `${correctCount}/5`;
+            
+            // Change score color based on value
+            const scoreElement = document.getElementById('finalScore');
+            if (score >= 80) {
+                scoreElement.style.color = '#4caf50';
+            } else if (score >= 60) {
+                scoreElement.style.color = '#ff9800';
+            } else {
+                scoreElement.style.color = '#f44336';
+            }
+        }
+
+        // Restart Quiz
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            exitCount = 0;
+            timerSeconds = 600;
+            correctCount = 0;
+            selectedAnswer = null;
+            
+            document.getElementById('resultContainer').style.display = 'none';
+            document.getElementById('characterSelection').style.display = 'flex';
+            document.getElementById('exitCounter').textContent = '🚨 Keluar: 0x';
+        }
+
+        // Prevent right-click (optional anti-cheat)
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        
+        // Prevent copy-paste (optional anti-cheat)
+        document.addEventListener('copy', event => event.preventDefault());
+    </script>
+</body>
+</html>
