@@ -248,30 +248,89 @@
             cursor: not-allowed;
         }
 
-        /* Feedback Animation */
-        .feedback {
+        /* Feedback Modal */
+        .feedback-overlay {
+            display: none;
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            font-size: 3em;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .feedback-overlay.show {
+            display: flex;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .feedback-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 60px 80px;
+            text-align: center;
+            border: 5px solid;
+            animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+        }
+
+        .feedback-content.correct {
+            border-color: #4caf50;
+        }
+
+        .feedback-content.wrong {
+            border-color: #f44336;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0) rotate(-10deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .feedback-text {
+            font-size: 3.5em;
             font-weight: bold;
             color: white;
-            text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            pointer-events: none;
-            text-align: center;
-            max-width: 80%;
+            text-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            margin-bottom: 30px;
+            animation: pulse 1.5s ease-in-out infinite;
         }
 
-        .feedback.show {
-            animation: feedbackShow 1.5s ease-out;
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
-        @keyframes feedbackShow {
-            0% { transform: translate(-50%, -50%) scale(0) rotate(-10deg); opacity: 0; }
-            50% { transform: translate(-50%, -50%) scale(1.2) rotate(5deg); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+        .feedback-close-btn {
+            background: white;
+            color: #333;
+            border: none;
+            border-radius: 15px;
+            padding: 15px 50px;
+            font-size: 1.3em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .feedback-close-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .feedback-close-btn:active {
+            transform: scale(0.95);
         }
 
         /* Result Screen */
@@ -465,8 +524,21 @@
         <button class="restart-btn" onclick="restartQuiz()">🔄 Ulang Lagi</button>
     </div>
 
-    <!-- Feedback Animation -->
-    <div class="feedback" id="feedback"></div>
+    <!-- Feedback Modal -->
+    <div class="feedback-overlay" id="feedbackOverlay">
+        <div class="feedback-content" id="feedbackContent">
+            <div class="feedback-text" id="feedbackText"></div>
+            <button class="feedback-close-btn" onclick="closeFeedback()">TUTUP</button>
+        </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="correctAudio" loop>
+        <source src="audio/correct.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="wrongAudio" loop>
+        <source src="audio/wrong.mp3" type="audio/mpeg">
+    </audio>
 
     <!-- Warning Modal -->
     <div class="warning-modal" id="warningModal">
@@ -678,9 +750,59 @@
                 options[question.correct].classList.add('correct');
             }
             
-            // Disable all options
+            // Disable all options and next button
             options.forEach(opt => opt.style.pointerEvents = 'none');
+            document.getElementById('nextBtn').disabled = true;
+        }
+
+        // Show Feedback
+        function showFeedback(text, isCorrect) {
+            const overlay = document.getElementById('feedbackOverlay');
+            const content = document.getElementById('feedbackContent');
+            const textElement = document.getElementById('feedbackText');
             
+            textElement.textContent = text;
+            
+            // Set styling based on correct/wrong
+            if (isCorrect) {
+                content.classList.add('correct');
+                content.classList.remove('wrong');
+            } else {
+                content.classList.add('wrong');
+                content.classList.remove('correct');
+            }
+            
+            // Show overlay
+            overlay.classList.add('show');
+            
+            // Play audio loop
+            const correctAudio = document.getElementById('correctAudio');
+            const wrongAudio = document.getElementById('wrongAudio');
+            
+            // Stop all audio first
+            correctAudio.pause();
+            wrongAudio.pause();
+            correctAudio.currentTime = 0;
+            wrongAudio.currentTime = 0;
+            
+            // Play appropriate audio
+            if (isCorrect) {
+                correctAudio.play();
+            } else {
+                wrongAudio.play();
+            }
+        }
+
+        // Close Feedback
+        function closeFeedback() {
+            const overlay = document.getElementById('feedbackOverlay');
+            overlay.classList.remove('show');
+            
+            // Stop all audio
+            document.getElementById('correctAudio').pause();
+            document.getElementById('wrongAudio').pause();
+            
+            // Move to next question after closing
             setTimeout(() => {
                 currentQuestionIndex++;
                 
@@ -689,19 +811,7 @@
                 } else {
                     endQuiz();
                 }
-            }, 2000);
-        }
-
-        // Show Feedback
-        function showFeedback(text, isCorrect) {
-            const feedback = document.getElementById('feedback');
-            feedback.textContent = text;
-            feedback.style.color = isCorrect ? '#4caf50' : '#ff4444';
-            feedback.classList.add('show');
-            
-            setTimeout(() => {
-                feedback.classList.remove('show');
-            }, 1500);
+            }, 300);
         }
 
         // Timer
